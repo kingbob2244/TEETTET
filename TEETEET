@@ -141,7 +141,7 @@ local Library = {
 
 pcall(function() Library.DevicePlatform = InputService:GetPlatform(); end); -- For safety so the UI library doesn't error.
 Library.IsMobile = (Library.DevicePlatform == Enum.Platform.Android or Library.DevicePlatform == Enum.Platform.IOS);
-Library.MinSize = if Library.IsMobile then Vector2.new(650, 400) else Vector2.new(700, 500); -- Wider minimum size for horizontal layout
+Library.MinSize = if Library.IsMobile then Vector2.new(600, 350) else Vector2.new(650, 450); -- More compact size
 
 local RainbowStep = 0
 local Hue = 0
@@ -230,7 +230,7 @@ function Library:SetDPIScale(value: number)
     assert(type(value) == "number", "Expected type number for DPI scale but got " .. typeof(value))
     
     DPIScale = value / 100;
-    Library.MinSize = (if Library.IsMobile then Vector2.new(650, 400) else Vector2.new(700, 500)) * DPIScale;
+    Library.MinSize = (if Library.IsMobile then Vector2.new(600, 350) else Vector2.new(650, 450)) * DPIScale;
 end;
 
 function Library:SafeCallback(Func, ...)
@@ -1528,7 +1528,7 @@ do
     end;
 
     function BaseAddonsFuncs:AddKeyPicker(Idx, Info)
-        local ParentObj = self;
+        local ParentObj = self
         local ToggleLabel = self.TextLabel;
         --local Container = self.Container;
 
@@ -5121,7 +5121,7 @@ function Library:Notify(...)
     return Data
 end
 
--- MODIFIED: Horizontal layout with tabs on the left
+-- MODIFIED: Compact horizontal layout with tabs at the bottom
 function Library:CreateWindow(...)
     local Arguments = { ... }
     local Config = { AnchorPoint = Vector2.zero }
@@ -5143,9 +5143,9 @@ function Library:CreateWindow(...)
     if typeof(Config.Size) ~= 'UDim2' then
         if Library.IsMobile then
             local ViewportSizeYOffset = tonumber(workspace.CurrentCamera.ViewportSize.Y) - 35;
-            Config.Size = UDim2.fromOffset(700, math.clamp(ViewportSizeYOffset, 200, 600))
+            Config.Size = UDim2.fromOffset(650, math.clamp(ViewportSizeYOffset, 200, 550))
         else
-            Config.Size = UDim2.fromOffset(800, 550) -- Wider for horizontal layout
+            Config.Size = UDim2.fromOffset(700, 500) -- More compact than before (was 800x550)
         end
     end
 
@@ -5218,83 +5218,12 @@ function Library:CreateWindow(...)
         Parent = Inner;
     });
 
-    -- MODIFIED: Horizontal layout - Left side for tabs, right side for content
-    -- Left sidebar for tabs
-    local TabSidebar = Library:Create('Frame', {
-        BackgroundColor3 = Library.BackgroundColor;
-        BorderColor3 = Library.OutlineColor;
-        Position = UDim2.new(0, 8, 0, 35);
-        Size = UDim2.new(0, 150, 1, -43);
-        ZIndex = 2;
-        Parent = Inner;
-    });
-
-    -- Add corner rounding to tab sidebar
-    Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 10);
-        Parent = TabSidebar;
-    });
-
-    Library:AddToRegistry(TabSidebar, {
-        BackgroundColor3 = 'BackgroundColor';
-        BorderColor3 = 'OutlineColor';
-    });
-
-    local TabSidebarInner = Library:Create('Frame', {
-        BackgroundColor3 = Library.BackgroundColor;
-        BorderColor3 = Color3.new(0, 0, 0);
-        BorderMode = Enum.BorderMode.Inset;
-        Position = UDim2.new(0, 0, 0, 0);
-        Size = UDim2.new(1, 0, 1, 0);
-        ZIndex = 3;
-        Parent = TabSidebar;
-    });
-
-    -- Add corner rounding to tab sidebar inner
-    Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 10);
-        Parent = TabSidebarInner;
-    });
-
-    Library:AddToRegistry(TabSidebarInner, {
-        BackgroundColor3 = 'BackgroundColor';
-    });
-
-    -- Tab buttons container
-    local TabButtonsContainer = Library:Create('ScrollingFrame', {
-        BackgroundTransparency = 1;
-        BorderSizePixel = 0;
-        Position = UDim2.new(0, 5, 0, 5);
-        Size = UDim2.new(1, -10, 1, -10);
-        CanvasSize = UDim2.new(0, 0, 0, 0);
-        ScrollBarThickness = 3;
-        ScrollBarImageColor3 = Library.AccentColor;
-        ZIndex = 4;
-        Parent = TabSidebarInner;
-    });
-
-    Library:AddToRegistry(TabButtonsContainer, {
-        ScrollBarImageColor3 = 'AccentColor';
-    });
-
-    local TabButtonsLayout = Library:Create('UIListLayout', {
-        Padding = UDim.new(0, Config.TabPadding);
-        FillDirection = Enum.FillDirection.Vertical;
-        SortOrder = Enum.SortOrder.LayoutOrder;
-        HorizontalAlignment = Enum.HorizontalAlignment.Center;
-        Parent = TabButtonsContainer;
-    });
-
-    TabButtonsLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-        TabButtonsContainer.CanvasSize = UDim2.fromOffset(0, TabButtonsLayout.AbsoluteContentSize.Y + 10);
-    end);
-
-    -- Main content area
+    -- Main content area (above tabs)
     local ContentArea = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.OutlineColor;
-        Position = UDim2.new(0, 166, 0, 35);
-        Size = UDim2.new(1, -174, 1, -43);
+        Position = UDim2.new(0, 8, 0, 35);
+        Size = UDim2.new(1, -16, 1, -65); -- Leave space for title and bottom tabs
         ZIndex = 2;
         Parent = Inner;
     });
@@ -5351,6 +5280,78 @@ function Library:CreateWindow(...)
 
     Library.InnerVideoBackground = InnerVideoBackground;
 
+    -- Bottom tab bar
+    local TabBar = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Library.OutlineColor;
+        Position = UDim2.new(0, 8, 1, -30);
+        Size = UDim2.new(1, -16, 0, 30);
+        ZIndex = 2;
+        Parent = Inner;
+    });
+
+    -- Add corner rounding to tab bar
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 10);
+        Parent = TabBar;
+    });
+
+    Library:AddToRegistry(TabBar, {
+        BackgroundColor3 = 'BackgroundColor';
+        BorderColor3 = 'OutlineColor';
+    });
+
+    local TabBarInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Color3.new(0, 0, 0);
+        BorderMode = Enum.BorderMode.Inset;
+        Position = UDim2.new(0, 1, 0, 1);
+        Size = UDim2.new(1, -2, 1, -2);
+        ZIndex = 3;
+        Parent = TabBar;
+    });
+
+    -- Add corner rounding to tab bar inner
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 10);
+        Parent = TabBarInner;
+    });
+
+    Library:AddToRegistry(TabBarInner, {
+        BackgroundColor3 = 'BackgroundColor';
+    });
+
+    -- Tab buttons container (horizontal scrolling)
+    local TabButtonsContainer = Library:Create('ScrollingFrame', {
+        BackgroundTransparency = 1;
+        BorderSizePixel = 0;
+        Position = UDim2.new(0, 5, 0, 0);
+        Size = UDim2.new(1, -10, 1, 0);
+        CanvasSize = UDim2.new(0, 0, 0, 0);
+        ScrollBarThickness = 3;
+        ScrollBarImageColor3 = Library.AccentColor;
+        ScrollingDirection = Enum.ScrollingDirection.X;
+        ZIndex = 4;
+        Parent = TabBarInner;
+    });
+
+    Library:AddToRegistry(TabButtonsContainer, {
+        ScrollBarImageColor3 = 'AccentColor';
+    });
+
+    local TabButtonsLayout = Library:Create('UIListLayout', {
+        Padding = UDim.new(0, Config.TabPadding);
+        FillDirection = Enum.FillDirection.Horizontal;
+        SortOrder = Enum.SortOrder.LayoutOrder;
+        HorizontalAlignment = Enum.HorizontalAlignment.Left;
+        VerticalAlignment = Enum.VerticalAlignment.Center;
+        Parent = TabButtonsContainer;
+    });
+
+    TabButtonsLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+        TabButtonsContainer.CanvasSize = UDim2.fromOffset(TabButtonsLayout.AbsoluteContentSize.X + 10, 0);
+    end);
+
     function Window:SetWindowTitle(Title)
         if typeof(Title) == "string" then
             Window.Title = Title;
@@ -5358,7 +5359,7 @@ function Library:CreateWindow(...)
         end
     end;
 
-    -- MODIFIED: AddTab with left sidebar buttons
+    -- MODIFIED: AddTab with bottom bar buttons
     function Window:AddTab(Name)
         local Tab = {
             Groupboxes = {};
@@ -5366,20 +5367,20 @@ function Library:CreateWindow(...)
             OriginalName = Name; Name = Name;
         };
 
-        -- Create left sidebar tab button
-        local TabButtonWidth = 130; -- Fixed width for sidebar buttons
+        -- Create bottom tab button
+        local TabButtonWidth = Library:GetTextBounds(Tab.Name, Library.Font, 15) + 25;
         
         local TabButton = Library:Create('Frame', {
             BackgroundColor3 = Library.BackgroundColor;
             BorderColor3 = Library.OutlineColor;
-            Size = UDim2.new(1, -10, 0, 35);
+            Size = UDim2.new(0, TabButtonWidth, 0, 20);
             ZIndex = 5;
             Parent = TabButtonsContainer;
         });
 
         -- Add corner rounding to tab button
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 8);
+            CornerRadius = UDim.new(0, 6);
             Parent = TabButton;
         });
 
@@ -5392,9 +5393,9 @@ function Library:CreateWindow(...)
             Position = UDim2.new(0, 8, 0, 0);
             Size = UDim2.new(1, -16, 1, 0);
             Text = Tab.Name;
-            TextSize = 15;
-            TextWrapped = true;
-            TextXAlignment = Enum.TextXAlignment.Left;
+            TextSize = 14;
+            TextWrapped = false;
+            TextXAlignment = Enum.TextXAlignment.Center;
             RichText = true; -- Added to support color fonts
             ZIndex = 6;
             Parent = TabButton;
@@ -5403,8 +5404,8 @@ function Library:CreateWindow(...)
         local TabIndicator = Library:Create('Frame', {
             BackgroundColor3 = Library.AccentColor;
             BorderSizePixel = 0;
-            Position = UDim2.new(0, 0, 0, 5);
-            Size = UDim2.new(0, 3, 1, -10);
+            Position = UDim2.new(0.1, 0, 1, -3);
+            Size = UDim2.new(0.8, 0, 0, 3);
             BackgroundTransparency = 1;
             ZIndex = 7;
             Parent = TabButton;
@@ -5684,6 +5685,8 @@ function Library:CreateWindow(...)
         function Tab:SetName(Name)
             if typeof(Name) == "string" then
                 Tab.Name = Name;
+                local TabButtonWidth = Library:GetTextBounds(Tab.Name, Library.Font, 15) + 25;
+                TabButton.Size = UDim2.new(0, TabButtonWidth, 0, 20);
                 TabButtonLabel.Text = Tab.Name;
             end
         end;
